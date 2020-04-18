@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <!-- 根据namespace找到接口，完成它的实现类的功能，通过dom4j 解析该xml 成为实现类，实现该接口 -->
+ <mapper namespace="cn.ekgc.springAndMybatis.dao.UserDao">
+ 	<!-- 因为application.xml中配置了实体类包的别名，所以这里的parameterType是实体类的直接写类名
+ 	到时候解析时会将别名 +parameterType 的值相加作为parameterType的值
+ 	即：   parameterType= "cn.ekgc.springAndMybatis.entity.User"
+ 	 -->
+ 	<insert id="saveUser" parameterType="User">
+ 		insert into sys_user (username,cellphone)values(#{username},#{cellphone});
+ 	
+ 	</insert>
+ </mapper>

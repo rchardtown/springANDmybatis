@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/context
+							http://www.springframework.org/schema/context/spring-context.xsd
+							http://www.springframework.org/schema/tx
+							http://www.springframework.org/schema/tx/spring-tx.xsd">
+	<!-- 配置spring注解扫描包的位置：指明spring去哪些包里扫描，要创建的对象有哪些 -->
+	<context:component-scan
+		base-package="cn.ekgc.springAndMybatis" />
+
+	<!-- ******************************spring 接管mybatis 开始****************************** -->
+
+	<!--设定使用的properties文件:jdbc.properties 的路径 -->
+	<context:property-placeholder
+		location="jdbc.properties" />
+	<!-- 借助于数据库连接池，使用JDBC的机制连接数据库 [start] -->
+	<bean id="dataSource"
+		class="com.alibaba.druid.pool.DruidDataSource">
+		<!-- 依赖注入数据库得四个基本信息 -->
+		<property name="driverClassName" value="${jdbc.driverClass}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 提高数据库的连接效率，设定连接对象的最大、最小、初始工作时连接的数据库数量,关闭最大激活数量的(最少和最长)等待时间 -->
+		<property name="minIdle" value="${druid.minIdle}"></property>
+		<property name="maxActive" value="${druid.minIdle}"></property>
+		<property name="initialSize" value="${druid.initialSize}"></property>
+		<property name="minEvictableIdleTimeMillis"
+			value="${druid.minEvictableIdleTimeMillis}"></property>
+		<property name="maxEvictableIdleTimeMillis"
+			value="${druid.maxEvictableIdleTimeMillis}"></property>
+	</bean>
+	<!-- 借助于数据库连接池，使用JDBC的机制连接数据库 [end] -->
+
+	<!-- spring创建Mybatis的创建者SqlSessionFactory对象 [start] -->
+	<bean id="sqlSessionFactoryBean"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 依赖注入上面的dataSource 信息 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 设定所有的Mybatis的映射文件位置 -->
+		<property name="mapperLocations" value="mapper/*.mapper.xml" />
+		<!-- 配置个别名 -->
+		<property name="typeAliasesPackage"
+			value="cn.ekgc.springAndMybatis.entity" />
+
+		<!-- 因为 *.mapper.xml 的作用是取代 Dao 层实现类（如userDaoImpl），
+			这里配置了
+			*.mapper.xml的位置，作用是spring 自动扫描这些xml ,通过反射机制
+			层的接口。这样spring框架中就不再需要数据持久层的实现类了。 -->
+		
+	</bean>
+	<!-- spring创建Mybatis的创建者SqlSessionFactory对象 [end] -->
+	<!-- 配置让spring 自动扫描加载的数据持久层（Dao层）接口 [start] -->
+	<bean id="mapperScanner"
+		class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 接口关联对应的实现类(id<->value) -->
+		<property name="sqlSessionFactoryBeanName"
+			value="sqlSessionFactoryBean"></property>
+		<!-- 设定接口报的位置 -->
+		<property name="basePackage"
+			value="cn.ekgc.springAndMybatis.dao"></property>
+	</bean>
+	<!-- 配置让spring 自动扫描加载的数据持久层（Dao层）接口 [end] -->
+	<!-- ******************************spring 接管mybatis 结束****************************** -->
+
+	<!-- ****************spring 处理事务 【start】**************** -->
+	<!-- spring接管Mybatis后在事务处理上采用了jdbc的事务处理机制，借助了CGLIB的代理模式 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 当上面的proxy-target-class ="false" 时就是常用的AOP的代理模式，只是在这里用不合适 -->
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+	<!-- ****************spring 处理事务 【end】**************** -->
+	<!-- ******************************spring 接管mybatis 结束****************************** -->
+
+</beans>
